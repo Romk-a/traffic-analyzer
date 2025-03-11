@@ -1,6 +1,9 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"time"
+)
 
 type Car struct {
 	Model string
@@ -15,6 +18,32 @@ func isEven(n int) bool {
 // Функция для проверки четности числа
 func multiply(a int, b int) int {
 	return a * b
+}
+
+func sayHello() {
+	fmt.Println("Hello from goroutine")
+}
+
+func Sender(ch chan int) {
+	time.Sleep(10 * time.Second) // Имитируем обработку полученного числа
+	fmt.Println(time.Now().Format("15:04:05.000"), "Горутина отправителя запущена")
+	for i := range 5 {
+		ch <- i
+		fmt.Println(time.Now().Format("15:04:05.000"), "Отправили число:", i)
+		// time.Sleep(500 * time.Millisecond) // Имитируем задержку перед отправкой следующего числа
+	}
+	close(ch) // Закрытие канала после отправки всех чисел
+	fmt.Println(time.Now().Format("15:04:05.000"), "Горутина отправителя завершена")
+}
+
+func Receiver(ch chan int) {
+	time.Sleep(300 * time.Millisecond) // Имитируем обработку полученного числа
+	fmt.Println(time.Now().Format("15:04:05.000"), "Горутина получателя запущена")
+	for num := range ch {
+		fmt.Println(time.Now().Format("15:04:05.000"), "Получено число:", num)
+		time.Sleep(300 * time.Millisecond) // Имитируем обработку полученного числа
+	}
+	fmt.Println(time.Now().Format("15:04:05.000"), "Горутина получателя завершена")
 }
 
 func main() {
@@ -51,4 +80,19 @@ func main() {
 		"Moscow":      12000000,
 	}
 	fmt.Println("Население Москвы", cities["Moscow"], "людей")
+
+	// Использование горутины для выполнения функции в отдельной горутине
+	go sayHello()
+	time.Sleep(1 * time.Second)
+	// fmt.Println("Main done")
+
+	// Создание буфферизованного канала с размером буфера 2
+	ch := make(chan int, 3)
+	// Запуск горутин отправителя
+	go Sender(ch)
+
+	// Запуск как функции получателя
+	Receiver(ch)
+
+	fmt.Println("Программа завершена")
 }
